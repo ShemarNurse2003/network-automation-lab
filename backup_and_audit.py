@@ -2,6 +2,11 @@ from datetime import date
 from pathlib import Path
 from netmiko import ConnectHandler
 
+from netmiko.exceptions import (
+    NetmikoAuthenticationException,
+    NetmikoTimeoutException,
+)
+
 # Lab device details (matches docker-compose.yml)
 router_connection = {
     "device_type": "linux",
@@ -36,6 +41,11 @@ def run_compliance_checks(running_config):
         print(f"  [{status}] {description}")
 
 if __name__ == "__main__":
-    with ConnectHandler(**router_connection) as connection:
-        config_text = backup_config(connection, "router1")
-        run_compliance_checks(config_text)
+    try:
+        with ConnectHandler(**router_connection) as connection:
+            config_text = backup_config(connection, "router1")
+            run_compliance_checks(config_text)
+    except NetmikoAuthenticationException:
+        print("router1: login failed. Check username and password.")
+    except NetmikoTimeoutException:
+        print("router1: unreachable. Check the device is up and the port is right.")
