@@ -1,0 +1,8 @@
+services:
+  router1:
+    build: .
+    container_name: router1
+    hostname: router1
+    privileged: true
+    ports:
+      - "2222:22"
