@@ -20,7 +20,7 @@ router_connection = {
 compliance_checks = [
     ("Hostname is set to router1", "hostname router1"),
     ("Logging to syslog is configured", "log syslog"),
-    ("Banner is configured", "banner motd"),
+    ("Password encryption is enabled", "service password-encryption"),
 ]
 
 def backup_config(connection, device_name):
