@@ -1,0 +1,14 @@
+% Can't open configuration file /etc/frr/vtysh.conf due to 'No such file or directory'.
+Building configuration...
+
+Current configuration:
+!
+frr version 8.4_git
+frr defaults traditional
+hostname router2
+log syslog
+service password-encryption
+no ipv6 forwarding
+service password-encryption
+!
+end

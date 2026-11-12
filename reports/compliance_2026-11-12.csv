@@ -1,0 +1,7 @@
+timestamp,device,check,status
+2026-11-12 11:36:05,router1,Hostname matches device name,PASS
+2026-11-12 11:36:05,router1,Logging to syslog is configured,PASS
+2026-11-12 11:36:05,router1,Password encryption is enabled,PASS
+2026-11-12 11:36:06,router2,Hostname matches device name,PASS
+2026-11-12 11:36:06,router2,Logging to syslog is configured,PASS
+2026-11-12 11:36:06,router2,Password encryption is enabled,PASS
