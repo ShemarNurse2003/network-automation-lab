@@ -6,3 +6,12 @@ services:
     privileged: true
     ports:
       - "2222:22"
+
+
+  router2:
+    build: .
+    container_name: router2
+    hostname: router2
+    privileged: true
+    ports:
+      - "2223:22"

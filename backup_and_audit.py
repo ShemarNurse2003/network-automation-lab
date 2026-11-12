@@ -1,27 +1,26 @@
 from datetime import date
 from pathlib import Path
-from netmiko import ConnectHandler
 
+import yaml
+from netmiko import ConnectHandler
 from netmiko.exceptions import (
     NetmikoAuthenticationException,
     NetmikoTimeoutException,
 )
 
-# Lab device details (matches docker-compose.yml)
-router_connection = {
-    "device_type": "linux",
-    "host": "127.0.0.1",
-    "port": 2222,
-    "username": "root",
-    "password": "labpass123",
-}
+INVENTORY_FILE = "inventory.yml"
 
 # Each check: (description, text that must appear in the config)
 compliance_checks = [
-    ("Hostname is set to router1", "hostname router1"),
+    ("Hostname matches device name", "hostname {name}"),
     ("Logging to syslog is configured", "log syslog"),
     ("Password encryption is enabled", "service password-encryption"),
 ]
+
+def load_inventory(path):
+    """Read devices and credentials from the YAML inventory."""
+    with open(path) as inventory_file:
+        return yaml.safe_load(inventory_file)
 
 def backup_config(connection, device_name):
     """Pull the running config and save it with today's date."""
@@ -30,22 +29,36 @@ def backup_config(connection, device_name):
     backup_dir.mkdir(exist_ok=True)
     backup_file = backup_dir / f"{device_name}_{date.today()}.txt"
     backup_file.write_text(running_config)
-    print(f"Backup saved: {backup_file}")
+    print(f"  Backup saved: {backup_file}")
     return running_config
 
-def run_compliance_checks(running_config):
+def run_compliance_checks(running_config, device_name):
     """Print PASS/FAIL for each required config line."""
-    print("\nCompliance report")
     for description, required_text in compliance_checks:
+        required_text = required_text.format(name=device_name)
         status = "PASS" if required_text in running_config else "FAIL"
         print(f"  [{status}] {description}")
 
-if __name__ == "__main__":
+def audit_device(device, credentials):
+    """Connect to one device, back it up, and run the checks."""
+    print(f"\n{device['name']}")
+    connection_details = {
+        "device_type": "linux",
+        "host": device["host"],
+        "port": device["port"],
+        "username": credentials["username"],
+        "password": credentials["password"],
+    }
     try:
-        with ConnectHandler(**router_connection) as connection:
-            config_text = backup_config(connection, "router1")
-            run_compliance_checks(config_text)
+        with ConnectHandler(**connection_details) as connection:
+            config_text = backup_config(connection, device["name"])
+            run_compliance_checks(config_text, device["name"])
     except NetmikoAuthenticationException:
-        print("router1: login failed. Check username and password.")
+        print("  login failed. Check username and password.")
     except NetmikoTimeoutException:
-        print("router1: unreachable. Check the device is up and the port is right.")
+        print("  unreachable. Check the device is up and the port is right.")
+
+if __name__ == "__main__":
+    inventory = load_inventory(INVENTORY_FILE)
+    for device in inventory["devices"]:
+        audit_device(device, inventory["credentials"])
